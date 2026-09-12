@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16
+    container_name: loci_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-loci}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-loci_password}
+      POSTGRES_DB: ${POSTGRES_DB:-loci}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: loci_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-loci}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-loci_password}
+      POSTGRES_DB: ${POSTGRES_DB:-loci}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-loci}:${POSTGRES_PASSWORD:-loci_password}@db:5432/${POSTGRES_DB:-loci}
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: loci_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
