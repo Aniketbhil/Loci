@@ -20,6 +20,8 @@ import {
   ConversationItem,
   ChatMessage,
 } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -35,6 +37,9 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [installedModels, setInstalledModels] = React.useState<InstalledModel[]>([]);
   const [selectedModel, setSelectedModel] = React.useState<string>("qwen2.5:0.5b");
   const [hardware, setHardware] = React.useState<HardwareResponse | null>(null);
@@ -48,6 +53,12 @@ export default function Home() {
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const cancelStreamRef = React.useRef<(() => void) | null>(null);
+
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
 
   const scrollToBottom = React.useCallback(() => {
     if (scrollRef.current) {
@@ -202,6 +213,21 @@ export default function Home() {
     }
     setIsStreaming(false);
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+          <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+          <span>Loading session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   if (showOnboarding || (installedModels.length === 0 && !checkingModels)) {
     return (

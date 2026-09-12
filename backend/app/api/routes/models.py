@@ -1,15 +1,16 @@
 import json
 import time
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
+from app.api.deps import get_current_user
 from app.services.recommendations import recommend_models
 from app.services.ollama_client import ollama_client
 from app.services.install_manager import install_manager
 from app.schemas.models import ModelRecommendationsResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.get("/recommendations", response_model=ModelRecommendationsResponse)

@@ -5,13 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.conversation import Conversation
 from app.models.message import Message
 from app.schemas.chat import ChatStreamRequest
 from app.services.ollama_client import ollama_client
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.post("/stream")

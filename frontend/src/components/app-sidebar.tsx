@@ -7,7 +7,10 @@ import {
   Bot,
   Settings,
   Cpu,
+  LogOut,
+  User,
 } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
 import {
   Sidebar,
   SidebarContent,
@@ -40,6 +43,8 @@ export function AppSidebar({
   onNewChat,
   hardware,
 }: AppSidebarProps) {
+  const { user, logout } = useAuth();
+
   return (
     <Sidebar className="border-r border-border/40 bg-sidebar">
       <SidebarHeader className="p-4 space-y-3">
@@ -123,6 +128,24 @@ export function AppSidebar({
           </div>
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
         </div>
+
+        {user && (
+          <div className="flex items-center justify-between px-2 py-1.5 rounded-md border border-border/40 bg-muted/20 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <span className="truncate font-medium text-xs">{user.name || user.email}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => logout()}
+              title="Log out"
+              className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
 
         <SidebarMenu>
           <SidebarMenuItem>

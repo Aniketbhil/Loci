@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
+from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.conversation import Conversation
 from app.models.message import Message
@@ -13,7 +14,7 @@ from app.schemas.conversation import (
 )
 from app.schemas.message import MessageCreate, MessageResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.post("/", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)

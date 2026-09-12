@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.core.config import settings
-from app.models import Base, Conversation, Message
+from app.models import Base, Conversation, Message, User
 
 
 config = context.config

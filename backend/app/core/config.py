@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = None
     OLLAMA_BASE_URL: str = "http://ollama:11434"
 
+    JWT_SECRET: str = "change_this_secret_key_in_production"
+    JWT_EXPIRE_MINUTES: int = 60 * 24 * 8
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: Optional[str] = None
+    FRONTEND_URL: str = "http://localhost:3000"
+
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
