@@ -54,5 +54,16 @@ class OllamaClient:
                     if line.strip():
                         yield json.loads(line)
 
+    def delete_model(self, model: str) -> Dict[str, Any]:
+        """Delete/clean up a model in Ollama."""
+        url = f"{self.base_url}/api/delete"
+        payload = {"name": model}
+        with httpx.Client(timeout=10.0) as client:
+            response = client.request("DELETE", url, json=payload)
+            if response.status_code == 404:
+                return {"status": "not_found"}
+            response.raise_for_status()
+            return response.json() if response.content else {"status": "deleted"}
+
 
 ollama_client = OllamaClient()

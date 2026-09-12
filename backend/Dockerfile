@@ -1,6 +1,9 @@
 FROM python:3.12-slim
 
+RUN apt-get update && apt-get install -y pciutils && rm -rf /var/lib/apt/lists/*
+
 # Copy uv binary from official image
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
