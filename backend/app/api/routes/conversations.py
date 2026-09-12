@@ -14,15 +14,19 @@ from app.schemas.conversation import (
 )
 from app.schemas.message import MessageCreate, MessageResponse
 
+from app.models.user import User
+
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.post("/", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
 def create_conversation(
-    conversation_in: ConversationCreate, db: Session = Depends(get_db)
+    conversation_in: ConversationCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     title = conversation_in.title or "New Conversation"
-    conversation = Conversation(title=title)
+    conversation = Conversation(title=title, user_id=current_user.id)
     db.add(conversation)
     db.commit()
     db.refresh(conversation)
@@ -30,12 +34,15 @@ def create_conversation(
 
 
 @router.get("/", response_model=List[ConversationResponse])
-
 def list_conversations(
-    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     conversations = (
         db.query(Conversation)
+        .filter((Conversation.user_id == current_user.id) | (Conversation.user_id == None))
         .order_by(Conversation.created_at.desc())
         .offset(skip)
         .limit(limit)

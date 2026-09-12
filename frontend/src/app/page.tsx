@@ -36,6 +36,8 @@ import {
   User,
 } from "lucide-react";
 
+import { LandingPage } from "@/components/landing-page";
+
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -53,12 +55,6 @@ export default function Home() {
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const cancelStreamRef = React.useRef<(() => void) | null>(null);
-
-  React.useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login");
-    }
-  }, [authLoading, user, router]);
 
   const scrollToBottom = React.useCallback(() => {
     if (scrollRef.current) {
@@ -226,7 +222,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return null;
+    return <LandingPage />;
   }
 
   if (showOnboarding || (installedModels.length === 0 && !checkingModels)) {

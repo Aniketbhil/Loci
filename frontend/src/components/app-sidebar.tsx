@@ -10,6 +10,7 @@ import {
   LogOut,
   User,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import {
   Sidebar,
@@ -44,6 +45,7 @@ export function AppSidebar({
   hardware,
 }: AppSidebarProps) {
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   return (
     <Sidebar className="border-r border-border/40 bg-sidebar">
@@ -149,7 +151,11 @@ export function AppSidebar({
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="sm" className="w-full justify-start gap-2 text-xs">
+            <SidebarMenuButton
+              size="sm"
+              onClick={() => router.push("/settings")}
+              className="w-full justify-start gap-2 text-xs"
+            >
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </SidebarMenuButton>

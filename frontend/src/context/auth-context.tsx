@@ -7,6 +7,8 @@ import {
   loginApi,
   signupApi,
   logoutApi,
+  updateMeApi,
+  deleteAccountApi,
   UserLoginPayload,
   UserSignupPayload,
 } from "@/lib/api";
@@ -17,6 +19,8 @@ interface AuthContextType {
   login: (payload: UserLoginPayload) => Promise<User>;
   signup: (payload: UserSignupPayload) => Promise<User>;
   logout: () => Promise<void>;
+  updateUser: (name: string) => Promise<User>;
+  deleteAccount: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -58,6 +62,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = async (name: string) => {
+    const updated = await updateMeApi({ name });
+    setUser(updated);
+    return updated;
+  };
+
+  const deleteAccount = async () => {
+    await deleteAccountApi();
+    setUser(null);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -66,6 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
+        updateUser,
+        deleteAccount,
         refreshUser,
       }}
     >
