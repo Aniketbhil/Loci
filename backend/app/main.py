@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.api.router import api_router
-from app.api.routes import conversations
+from app.api.routes import conversations, system
 from app.core.config import settings
 
 app = FastAPI(
@@ -22,6 +22,7 @@ def health_check():
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(conversations.router, prefix="/api/conversations", tags=["conversations"])
+app.include_router(system.router, prefix="/api/system", tags=["system"])
 
 
 if __name__ == "__main__":
