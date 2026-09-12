@@ -16,7 +16,6 @@ from app.schemas.message import MessageCreate, MessageResponse
 router = APIRouter()
 
 
-@router.post("", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
 def create_conversation(
     conversation_in: ConversationCreate, db: Session = Depends(get_db)
@@ -29,8 +28,8 @@ def create_conversation(
     return conversation
 
 
-@router.get("", response_model=List[ConversationResponse])
 @router.get("/", response_model=List[ConversationResponse])
+
 def list_conversations(
     skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):

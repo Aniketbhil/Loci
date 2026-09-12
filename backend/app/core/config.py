@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "loci"
     DATABASE_URL: Optional[str] = None
+    OLLAMA_BASE_URL: str = "http://ollama:11434"
+
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:

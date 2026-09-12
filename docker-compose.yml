@@ -12,6 +12,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: loci_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
   backend:
     build:
       context: ./backend
@@ -28,8 +37,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-loci_password}
       POSTGRES_DB: ${POSTGRES_DB:-loci}
       DATABASE_URL: postgresql://${POSTGRES_USER:-loci}:${POSTGRES_PASSWORD:-loci_password}@db:5432/${POSTGRES_DB:-loci}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
     depends_on:
       - db
+      - ollama
 
   frontend:
     build:
@@ -51,3 +62,4 @@ services:
 
 volumes:
   postgres_data:
+  ollama_data:
