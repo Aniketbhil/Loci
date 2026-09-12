@@ -13,7 +13,7 @@ COPY pyproject.toml uv.lock* ./
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-install-project || uv pip install --system fastapi uvicorn[standard] pydantic-settings python-dotenv psycopg2-binary sqlalchemy alembic
+    uv sync --no-install-project || uv pip install --system fastapi uvicorn pydantic-settings python-dotenv psycopg2-binary sqlalchemy alembic
 
 # Copy source code
 COPY . .
