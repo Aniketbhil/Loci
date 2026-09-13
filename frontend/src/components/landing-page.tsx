@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { Hero3DCanvas } from "@/components/hero-3d-canvas";
 import { SiteFooter } from "@/components/site-footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "cn";
@@ -139,9 +138,41 @@ export function LandingPage() {
             </Link>
           </div>
 
-          {/* 3D Hero Centerpiece */}
-          <div className="pt-6 pb-2">
-            <Hero3DCanvas />
+          {/* Hero Feature Highlights Card */}
+          <div className="pt-8 max-w-4xl mx-auto">
+            <div className="p-6 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xl space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-background/50 border border-border/40">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-foreground">100% Private</h4>
+                    <p className="text-[11px] text-muted-foreground">Local storage only</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-background/50 border border-border/40">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
+                    <Cpu className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-foreground">Hardware-Aware</h4>
+                    <p className="text-[11px] text-muted-foreground">RAM & GPU detection</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-background/50 border border-border/40">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0">
+                    <Zap className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-foreground">Zero Cloud Fee</h4>
+                    <p className="text-[11px] text-muted-foreground">Runs offline anytime</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

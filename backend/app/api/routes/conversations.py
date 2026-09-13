@@ -93,3 +93,43 @@ def create_message(
     db.commit()
     db.refresh(message)
     return message
+
+
+@router.delete("/{conversation_id}")
+def delete_conversation(
+    conversation_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    conversation = (
+        db.query(Conversation)
+        .filter(
+            (Conversation.id == conversation_id)
+            & ((Conversation.user_id == current_user.id) | (Conversation.user_id == None))
+        )
+        .first()
+    )
+    if not conversation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
+        )
+
+    db.delete(conversation)
+    db.commit()
+    return {"message": "Conversation deleted successfully"}
+
+
+@router.delete("/")
+def clear_all_conversations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user_conversations = (
+        db.query(Conversation)
+        .filter((Conversation.user_id == current_user.id) | (Conversation.user_id == None))
+        .all()
+    )
+    for conv in user_conversations:
+        db.delete(conv)
+    db.commit()
+    return {"message": "All conversations cleared successfully"}

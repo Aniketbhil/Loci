@@ -332,6 +332,12 @@ export function Onboarding({ onComplete, onBack }: OnboardingProps) {
           };
           const isExpanded = !!expandedDetails[tag];
 
+          const isAlreadyInstalled =
+            currentInstall.isDone ||
+            installedModelsList.some(
+              (m) => m.name === tag || m.name.startsWith(tag)
+            );
+
           return (
             <Card
               key={model.id}
@@ -435,29 +441,34 @@ export function Onboarding({ onComplete, onBack }: OnboardingProps) {
               </div>
 
               <CardFooter className="pt-2">
-                <Button
-                  className="w-full gap-2 shadow-xs"
-                  disabled={currentInstall.installing || currentInstall.isDone}
-                  onClick={() => handleInstall(tag)}
-                  variant={currentInstall.isDone ? "outline" : "default"}
-                >
-                  {currentInstall.isDone ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      <span>Ready to Use</span>
-                    </>
-                  ) : currentInstall.installing ? (
-                    <>
-                      <Download className="h-4 w-4 animate-bounce" />
-                      <span>Downloading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      <span>Install Model</span>
-                    </>
-                  )}
-                </Button>
+                {isAlreadyInstalled ? (
+                  <Button
+                    className="w-full gap-2 shadow-xs bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/10 cursor-not-allowed font-medium opacity-90"
+                    variant="outline"
+                    disabled
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span>Installed</span>
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full gap-2 shadow-xs"
+                    disabled={currentInstall.installing}
+                    onClick={() => handleInstall(tag)}
+                  >
+                    {currentInstall.installing ? (
+                      <>
+                        <Download className="h-4 w-4 animate-bounce" />
+                        <span>Downloading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        <span>Install Model</span>
+                      </>
+                    )}
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           );

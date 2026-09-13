@@ -22,8 +22,15 @@ import {
 } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "cn";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Bot,
   Send,
@@ -34,9 +41,55 @@ import {
   Square,
   RefreshCw,
   User,
+  Copy,
+  Check,
 } from "lucide-react";
 
 import { LandingPage } from "@/components/landing-page";
+
+function CopyButton({ content }: { content: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!content) return;
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setOpen(true);
+      setTimeout(() => {
+        setCopied(false);
+        setOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy message:", err);
+    }
+  };
+
+  return (
+    <TooltipProvider delay={0}>
+      <Tooltip open={open} onOpenChange={setOpen}>
+        <TooltipTrigger
+          onClick={handleCopy}
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon-xs" }),
+            "h-6 w-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 opacity-0 group-hover/msg:opacity-100 transition-all duration-150 shrink-0 cursor-pointer"
+          )}
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-emerald-500" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-[10px] px-2 py-1 font-mono">
+          {copied ? "Copied!" : "Copy response"}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -239,6 +292,20 @@ export default function Home() {
     );
   }
 
+  const handleDeleteConversation = (id: string) => {
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (activeConversationId === id) {
+      setActiveConversationId(null);
+      setMessages([]);
+    }
+  };
+
+  const handleClearAllConversations = () => {
+    setConversations([]);
+    setActiveConversationId(null);
+    setMessages([]);
+  };
+
   return (
     <SidebarProvider defaultOpen>
       <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -247,6 +314,8 @@ export default function Home() {
           activeConversationId={activeConversationId}
           onSelectConversation={handleSelectConversation}
           onNewChat={handleNewChat}
+          onDeleteConversation={handleDeleteConversation}
+          onClearAllConversations={handleClearAllConversations}
           hardware={hardware}
         />
 
@@ -317,7 +386,7 @@ export default function Home() {
                     return (
                       <div
                         key={idx}
-                        className={`flex gap-3 ${
+                        className={`group/msg flex gap-3 ${
                           isUser ? "justify-end" : "items-start"
                         }`}
                       >
@@ -327,17 +396,25 @@ export default function Home() {
                           </div>
                         )}
 
-                        <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                            isUser
-                              ? "bg-primary text-primary-foreground rounded-tr-xs shadow-xs"
-                              : "bg-muted/50 border border-border/50 rounded-tl-xs"
-                          }`}
-                        >
-                          {msg.content || (
-                            <span className="inline-flex items-center gap-1 text-muted-foreground text-xs animate-pulse font-mono">
-                              <RefreshCw className="h-3 w-3 animate-spin" /> Thinking...
-                            </span>
+                        <div className="relative max-w-[85%]">
+                          <div
+                            className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                              isUser
+                                ? "bg-primary text-primary-foreground rounded-tr-xs shadow-xs"
+                                : "bg-muted/50 border border-border/50 rounded-tl-xs pr-10"
+                            }`}
+                          >
+                            {msg.content || (
+                              <span className="inline-flex items-center gap-1 text-muted-foreground text-xs animate-pulse font-mono">
+                                <RefreshCw className="h-3 w-3 animate-spin" /> Thinking...
+                              </span>
+                            )}
+                          </div>
+
+                          {!isUser && msg.content && (
+                            <div className="absolute top-2.5 right-2.5">
+                              <CopyButton content={msg.content} />
+                            </div>
                           )}
                         </div>
 

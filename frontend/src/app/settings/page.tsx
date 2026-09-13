@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { changePasswordApi } from "@/lib/api";
+import { changePasswordApi, clearAllConversations } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -48,6 +48,9 @@ export default function SettingsPage() {
   // Account section state
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = React.useState(false);
+  const [showClearHistoryModal, setShowClearHistoryModal] = React.useState(false);
+  const [clearHistorySubmitting, setClearHistorySubmitting] = React.useState(false);
+  const [accountSuccess, setAccountSuccess] = React.useState<string | null>(null);
   const [accountError, setAccountError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -111,6 +114,22 @@ export default function SettingsPage() {
       setPasswordError(err.message || "Failed to change password.");
     } finally {
       setPasswordSubmitting(false);
+    }
+  };
+
+  const handleConfirmClearHistory = async () => {
+    setAccountError(null);
+    setAccountSuccess(null);
+    try {
+      setClearHistorySubmitting(true);
+      await clearAllConversations();
+      setAccountSuccess("All conversation history has been cleared successfully.");
+      setShowClearHistoryModal(false);
+    } catch (err: any) {
+      setAccountError(err.message || "Failed to clear conversation history.");
+      setShowClearHistoryModal(false);
+    } finally {
+      setClearHistorySubmitting(false);
     }
   };
 
@@ -347,6 +366,13 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-2">
+            {accountSuccess && (
+              <div className="flex items-center gap-2 p-3 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <span>{accountSuccess}</span>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/40 bg-muted/20">
               <div className="space-y-0.5">
                 <h4 className="text-sm font-semibold">Sign Out</h4>
@@ -362,6 +388,24 @@ export default function SettingsPage() {
               >
                 <LogOut className="h-4 w-4" />
                 <span>Log Out</span>
+              </Button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/40 bg-muted/20">
+              <div className="space-y-0.5">
+                <h4 className="text-sm font-semibold">Clear Conversation History</h4>
+                <p className="text-xs text-muted-foreground">
+                  Delete all your chat conversations and message history.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowClearHistoryModal(true)}
+                className="gap-2 text-xs font-medium text-destructive hover:text-destructive shrink-0"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Clear History</span>
               </Button>
             </div>
 
@@ -385,6 +429,52 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Clear History Confirmation Dialog */}
+      {showClearHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-destructive">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 border border-destructive/20 shrink-0">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <h3 className="text-lg font-bold leading-tight">Clear All Conversations?</h3>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Are you sure you want to delete all your conversations? This action cannot be undone and will erase all stored message history for your account.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={clearHistorySubmitting}
+                onClick={() => setShowClearHistoryModal(false)}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={clearHistorySubmitting}
+                onClick={handleConfirmClearHistory}
+                className="gap-2 text-xs"
+              >
+                {clearHistorySubmitting ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Clearing...</span>
+                  </>
+                ) : (
+                  <span>Clear All History</span>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Account Confirmation Dialog */}
       {showDeleteModal && (
