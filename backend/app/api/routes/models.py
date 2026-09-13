@@ -80,3 +80,19 @@ def cancel_install_model(model_name: str):
         return {"status": "cancelled", "model": model_name}
     except Exception as e:
         return {"status": "cancelled", "model": model_name, "error": str(e)}
+
+
+@router.delete("/installed/{model_name:path}")
+@router.delete("/{model_name:path}")
+def delete_installed_model(model_name: str):
+    if model_name.startswith("installed/"):
+        model_name = model_name[len("installed/") :]
+    try:
+        res = ollama_client.delete_model(model_name)
+        return {"status": "deleted", "model": model_name, "detail": res}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete model '{model_name}': {str(e)}",
+        )
+

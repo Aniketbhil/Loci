@@ -3,7 +3,14 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { changePasswordApi, clearAllConversations } from "@/lib/api";
+import {
+  changePasswordApi,
+  clearAllConversations,
+  getInstalledModels,
+  deleteInstalledModel,
+  InstalledModel,
+} from "@/lib/api";
+import { cn } from "cn";
 import {
   Card,
   CardContent,
@@ -25,6 +32,8 @@ import {
   RefreshCw,
   Shield,
   AlertTriangle,
+  Cpu,
+  HardDrive,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -53,13 +62,61 @@ export default function SettingsPage() {
   const [accountSuccess, setAccountSuccess] = React.useState<string | null>(null);
   const [accountError, setAccountError] = React.useState<string | null>(null);
 
+  // Installed Models section state
+  const [installedModels, setInstalledModels] = React.useState<InstalledModel[]>([]);
+  const [loadingModels, setLoadingModels] = React.useState(true);
+  const [modelSuccess, setModelSuccess] = React.useState<string | null>(null);
+  const [modelError, setModelError] = React.useState<string | null>(null);
+  const [modelToDelete, setModelToDelete] = React.useState<InstalledModel | null>(null);
+  const [deletingModel, setDeletingModel] = React.useState(false);
+
+  const fetchInstalledModels = React.useCallback(async () => {
+    try {
+      setLoadingModels(true);
+      const res = await getInstalledModels();
+      setInstalledModels(res.models || []);
+    } catch (err: any) {
+      console.error("Failed to load installed models:", err);
+      setModelError(err.message || "Failed to load installed models.");
+    } finally {
+      setLoadingModels(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
     } else if (user) {
       setName(user.name || "");
+      fetchInstalledModels();
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, router, fetchInstalledModels]);
+
+  const formatSize = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return "Unknown size";
+    const gb = bytes / (1024 * 1024 * 1024);
+    if (gb >= 1) return `${gb.toFixed(2)} GB`;
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} MB`;
+  };
+
+  const handleConfirmDeleteModel = async () => {
+    if (!modelToDelete) return;
+    setModelError(null);
+    setModelSuccess(null);
+    try {
+      setDeletingModel(true);
+      await deleteInstalledModel(modelToDelete.name);
+      setModelSuccess(`Model "${modelToDelete.name}" was successfully deleted from Ollama storage.`);
+      setInstalledModels((prev) => prev.filter((m) => m.name !== modelToDelete.name));
+      setModelToDelete(null);
+    } catch (err: any) {
+      setModelError(err.message || `Failed to delete model ${modelToDelete.name}.`);
+      setModelToDelete(null);
+    } finally {
+      setDeletingModel(false);
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,6 +319,100 @@ export default function SettingsPage() {
                 )}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Section: Installed Models */}
+        <Card className="border-border/60 shadow-xs">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Cpu className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-bold">Installed Models</CardTitle>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchInstalledModels}
+                disabled={loadingModels}
+                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                title="Refresh installed models list"
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", loadingModels && "animate-spin")} />
+                <span>Refresh</span>
+              </Button>
+            </div>
+            <CardDescription className="text-xs">
+              Manage locally downloaded Ollama models and delete model weights from disk.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-2">
+            {modelSuccess && (
+              <div className="flex items-center gap-2 p-3 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <span>{modelSuccess}</span>
+              </div>
+            )}
+            {modelError && (
+              <div className="flex items-center gap-2 p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{modelError}</span>
+              </div>
+            )}
+
+            {loadingModels ? (
+              <div className="flex items-center justify-center p-6 text-xs text-muted-foreground gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+                <span>Loading installed models...</span>
+              </div>
+            ) : installedModels.length === 0 ? (
+              <div className="p-6 text-center rounded-xl border border-dashed border-border/60 bg-muted/10 space-y-2">
+                <HardDrive className="h-8 w-8 text-muted-foreground mx-auto opacity-50" />
+                <p className="text-xs font-medium text-muted-foreground">No installed models found.</p>
+                <p className="text-[11px] text-muted-foreground/80">
+                  Head over to the onboarding tab in chat to install your first recommended model.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {installedModels.map((model) => (
+                  <div
+                    key={model.name}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-border/80 transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold tracking-tight">{model.name}</span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                          {formatSize(model.size)}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                        {model.details?.parameter_size && (
+                          <span>Params: {model.details.parameter_size}</span>
+                        )}
+                        {model.details?.quantization_level && (
+                          <span>Quant: {model.details.quantization_level}</span>
+                        )}
+                        {model.details?.format && (
+                          <span>Format: {model.details.format}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setModelToDelete(model)}
+                      className="gap-2 text-xs font-medium text-destructive hover:text-destructive shrink-0 cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete</span>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -469,6 +620,55 @@ export default function SettingsPage() {
                   </>
                 ) : (
                   <span>Clear All History</span>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Model Confirmation Dialog */}
+      {modelToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-destructive">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 border border-destructive/20 shrink-0">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold leading-tight">Delete Installed Model?</h3>
+                <p className="text-xs font-mono text-muted-foreground mt-0.5">{modelToDelete.name}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Are you sure you want to delete <strong className="text-foreground font-semibold">{modelToDelete.name}</strong> ({formatSize(modelToDelete.size)})? This will permanently remove the model weights and binary files from Ollama's local storage disk.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={deletingModel}
+                onClick={() => setModelToDelete(null)}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={deletingModel}
+                onClick={handleConfirmDeleteModel}
+                className="gap-2 text-xs"
+              >
+                {deletingModel ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete Model</span>
                 )}
               </Button>
             </div>
